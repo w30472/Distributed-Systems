@@ -1,0 +1,31 @@
+public class SmartCameraService extends CameraServiceGrpc.CameraServiceImplBase {
+
+  @Override
+  public StreamObserver<CameraFeedChunk> uploadCameraFeed(StreamObserver<UploadStatus> responseObserver) {
+    return new StreamObserver<CameraFeedChunk>() {
+      private StringBuilder videoBuilder = new StringBuilder();
+
+      @Override
+      public void onNext(CameraFeedChunk chunk) {
+        videoBuilder.append(new String(chunk.getVideoChunk().toByteArray(), StandardCharsets.UTF_8));
+      }
+
+      @Override
+      public void onError(Throwable t) {
+        // Handle error
+      }
+
+      @Override
+      public void onCompleted() {
+        String video = videoBuilder.toString();
+        // Process the video feed and send a response
+        UploadStatus status = UploadStatus.newBuilder()
+            .setSuccess(true)
+            .setMessage("Video feed processed successfully")
+            .build();
+        responseObserver.onNext(status);
+        responseObserver.onCompleted();
+      }
+    };
+  }
+}
