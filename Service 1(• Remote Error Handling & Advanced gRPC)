@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package com.example.smartcamera;
+
+option java_package = "com.example.smartcamera.grpc";
+option java_multiple_files = true;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+import "google/rpc/status.proto";
+
+service SmartCameraService {
+  // Start the camera stream for the specified camera ID.
+  rpc StartCamera (StartCameraRequest) returns (stream CameraFeed) {
+    option (google.api.http) = {
+      post: "/cameras/{camera_id}/start"
+      body: "*"
+    };
+  }
+
+  // Stop the camera stream for the specified camera ID.
+  rpc StopCamera (StopCameraRequest) returns (StopCameraResponse) {
+    option (google.api.http) = {
+      post: "/cameras/{camera_id}/stop"
+      body: "*"
+    };
+  }
+
+  // Save the camera feed frames to a file.
+  rpc SaveCameraFeed (stream SaveCameraFeedRequest) returns (SaveCameraFeedResponse) {
+    option (google.api.http) = {
+      post: "/cameras/feed"
+      body: "*"
+    };
+  }
+}
+
+message StartCameraRequest {
+  // ID of the camera to start streaming.
+  string camera_id = 1;
+  // Optional deadline for the request.
+  google.protobuf.Timestamp deadline = 2;
+}
+
+message CameraFeed {
+  // Binary representation of the camera frame.
+  bytes frame = 1;
+  // Timestamp when the frame was captured.
+  google.protobuf.Timestamp timestamp = 2;
+}
+
+message StopCameraRequest {
+  // ID of the camera to stop streaming.
+  string camera_id = 1;
+}
+
+message StopCameraResponse {
+  // Empty response.
+  google.protobuf.Empty empty = 1;
+}
+
+message SaveCameraFeedRequest {
+  // Binary representation of a camera frame.
+  bytes frame = 1;
+}
+
+message SaveCameraFeedResponse {
+  // File path where the camera feed was saved.
+  string file_path = 1;
+  // Optional status for the response.
+  google.rpc.Status status = 2;
+}
