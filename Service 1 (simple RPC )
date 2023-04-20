@@ -1,0 +1,31 @@
+import io.grpc.stub.StreamObserver;
+import smart_surveillance_system.CameraFeed;
+import smart_surveillance_system.CameraServiceGrpc.CameraServiceImplBase;
+import smart_surveillance_system.StartCameraRequest;
+
+public class CameraServiceImpl extends CameraServiceImplBase {
+    @Override
+    public void startCamera(StartCameraRequest request, StreamObserver<CameraFeed> responseObserver) {
+        // Retrieve the camera ID from the request
+        String cameraId = request.getCameraId();
+        
+        // Generate a fake video feed for the camera
+        byte[] videoFeed = generateVideoFeed(cameraId);
+        
+        // Create a CameraFeed message to send back as the response
+        CameraFeed response = CameraFeed.newBuilder()
+                .setVideoFeed(com.google.protobuf.ByteString.copyFrom(videoFeed))
+                .build();
+        
+        // Send the response back to the client
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+    
+    private byte[] generateVideoFeed(String cameraId) {
+        // In a real implementation, this method would retrieve the video feed from the camera hardware
+        // For the sake of this example, we'll just hardcode a byte array
+        String message = "Video feed for camera " + cameraId;
+        return message.getBytes();
+    }
+}
