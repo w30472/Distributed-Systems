@@ -1,0 +1,33 @@
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+import io.grpc.stub.StreamObserver;
+
+import java.io.IOException;
+
+public class CameraServiceImpl extends CameraServiceGrpc.CameraServiceImplBase {
+    @Override
+    public void streamCamera(CameraRequest request, StreamObserver<CameraFeed> responseObserver) {
+        String cameraId = request.getCameraId();
+        
+        // TODO: get the video feed for the given cameraId
+        
+        // Simulate a video feed by sending random bytes 10 times
+        for (int i = 0; i < 10; i++) {
+            byte[] videoBytes = new byte[1024];
+            Math.random();
+            responseObserver.onNext(CameraFeed.newBuilder().setVideoFeed(ByteString.copyFrom(videoBytes)).build());
+        }
+
+        responseObserver.onCompleted();
+    }
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+        Server server = ServerBuilder.forPort(8080).addService(new CameraServiceImpl()).build();
+
+        server.start();
+
+        System.out.println("Server started on port 8080");
+
+        server.awaitTermination();
+    }
+}
