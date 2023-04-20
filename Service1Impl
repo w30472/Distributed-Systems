@@ -1,0 +1,29 @@
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+import io.grpc.stub.StreamObserver;
+import smart_surveillance_system.CameraFeed;
+import smart_surveillance_system.CameraServiceGrpc;
+import smart_surveillance_system.StartCameraRequest;
+
+import java.io.IOException;
+import java.util.logging.Logger;
+
+public class CameraServiceImpl extends CameraServiceGrpc.CameraServiceImplBase {
+    private static final Logger logger = Logger.getLogger(CameraServiceImpl.class.getName());
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+        int port = 8080;
+        Server server = ServerBuilder.forPort(port)
+                .addService(new CameraServiceImpl())
+                .build()
+                .start();
+        logger.info("Server started, listening on " + port);
+
+        server.awaitTermination();
+    }
+
+    @Override
+    public void startCamera(StartCameraRequest request, StreamObserver<CameraFeed> responseObserver) {
+        // TODO: implement camera feed logic
+    }
+}
