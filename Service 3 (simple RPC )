@@ -1,0 +1,83 @@
+import io.grpc.stub.StreamObserver;
+import smart_surveillance_system.AccessControlGrpc.AccessControlImplBase;
+import smart_surveillance_system.AccessControlService.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class AccessControlImpl extends AccessControlImplBase {
+
+    private List<String> authorizedUsers = new ArrayList<>();
+
+    @Override
+    public StreamObserver<AuthorizationRequest> authorize(StreamObserver<AuthorizationResponse> responseObserver) {
+        return new StreamObserver<AuthorizationRequest>() {
+            @Override
+            public void onNext(AuthorizationRequest request) {
+                String user = request.getUser();
+
+                if (authorizedUsers.contains(user)) {
+                    // If user is already authorized, send back a success response
+                    AuthorizationResponse response = AuthorizationResponse.newBuilder()
+                            .setAuthorized(true)
+                            .setMessage("User is already authorized")
+                            .build();
+                    responseObserver.onNext(response);
+                } else {
+                    // If user is not authorized, send back a challenge response
+                    AuthorizationResponse response = AuthorizationResponse.newBuilder()
+                            .setAuthorized(false)
+                            .setChallenge("Please enter your password")
+                            .build();
+                    responseObserver.onNext(response);
+                }
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                // Handle error
+            }
+
+            @Override
+            public void onCompleted() {
+                responseObserver.onCompleted();
+            }
+        };
+    }
+
+    @Override
+    public StreamObserver<PasswordResponse> checkPassword(StreamObserver<AuthorizationResponse> responseObserver) {
+        return new StreamObserver<PasswordResponse>() {
+            @Override
+            public void onNext(PasswordResponse response) {
+                String password = response.getPassword();
+
+                if (password.equals("my_password")) {
+                    // If password is correct, add user to the authorized users list and send back a success response
+                    authorizedUsers.add(response.getUser());
+                    AuthorizationResponse authResponse = AuthorizationResponse.newBuilder()
+                            .setAuthorized(true)
+                            .setMessage("User authorized successfully")
+                            .build();
+                    responseObserver.onNext(authResponse);
+                } else {
+                    // If password is incorrect, send back a failure response
+                    AuthorizationResponse authResponse = AuthorizationResponse.newBuilder()
+                            .setAuthorized(false)
+                            .setMessage("Incorrect password")
+                            .build();
+                    responseObserver.onNext(authResponse);
+                }
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                // Handle error
+            }
+
+            @Override
+            public void onCompleted() {
+                responseObserver.onCompleted();
+            }
+        };
+    }
+}
