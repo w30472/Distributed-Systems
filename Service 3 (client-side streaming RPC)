@@ -1,0 +1,35 @@
+public class AccessControlClient {
+    private final AccessControlServiceGrpc.AccessControlServiceStub stub;
+
+    public AccessControlClient(Channel channel) {
+        stub = AccessControlServiceGrpc.newStub(channel);
+    }
+
+    public void requestAccess(String username, String password) {
+        AccessRequest request = AccessRequest.newBuilder()
+                .setUsername(username)
+                .setPassword(password)
+                .build();
+
+        stub.requestAccess(request, new StreamObserver<AccessResponse>() {
+            @Override
+            public void onNext(AccessResponse response) {
+                if (response.getGranted()) {
+                    System.out.println("Access granted for user " + username);
+                } else {
+                    System.out.println("Access denied for user " + username);
+                }
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                System.out.println("Error occurred during request: " + t.getMessage());
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("Request completed");
+            }
+        });
+    }
+}
