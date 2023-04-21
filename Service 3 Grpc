@@ -1,0 +1,58 @@
+import io.grpc.stub.StreamObserver;
+import smart_surveillance_system.AccessControlGrpc.AccessControlImplBase;
+import smart_surveillance_system.AccessControlOuterClass.*;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class AccessControlServiceImpl extends AccessControlImplBase {
+
+    private Map<String, AccessCode> accessCodeMap = new HashMap<>();
+
+    @Override
+    public StreamObserver<AccessRequest> checkAccess(StreamObserver<AccessResponse> responseObserver) {
+        return new StreamObserver<AccessRequest>() {
+            @Override
+            public void onNext(AccessRequest request) {
+                String userId = request.getUserId();
+                String accessCode = request.getAccessCode();
+
+                AccessResponse.Builder responseBuilder = AccessResponse.newBuilder();
+
+                if (accessCodeMap.containsKey(userId)) {
+                    // User has an access code set, compare it with the provided access code
+                    AccessCode storedAccessCode = accessCodeMap.get(userId);
+                    if (accessCode.equals(storedAccessCode.getCode())) {
+                        // Access granted
+                        responseBuilder.setStatus(Status.GRANTED);
+                    } else {
+                        // Access denied
+                        responseBuilder.setStatus(Status.DENIED);
+                    }
+                } else {
+                    // User does not have an access code set, set the access code
+                    AccessCode newAccessCode = AccessCode.newBuilder()
+                            .setCode(accessCode)
+                            .build();
+                    accessCodeMap.put(userId, newAccessCode);
+                    responseBuilder.setStatus(Status.CREATED);
+                }
+
+                // Send the response back to the client
+                responseObserver.onNext(responseBuilder.build());
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                // Log any errors that occur
+                System.err.println("Error checking access: " + throwable.getMessage());
+            }
+
+            @Override
+            public void onCompleted() {
+                // Signal that the server is done processing requests
+                responseObserver.onCompleted();
+            }
+        };
+    }
+}
