@@ -1,0 +1,79 @@
+public class SmartThermostatServiceImpl extends SmartThermostatServiceGrpc.SmartThermostatServiceImplBase {
+
+  private double currentTemperature = 68.0;
+  private boolean isHeatingOn = false;
+
+  @Override
+  public void getCurrentTemperature(TemperatureRequest request, StreamObserver<TemperatureResponse> responseObserver) {
+    TemperatureResponse response = TemperatureResponse.newBuilder()
+        .setTemperature(currentTemperature)
+        .build();
+    responseObserver.onNext(response);
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public StreamObserver<TemperatureRequest> setTemperature(StreamObserver<TemperatureResponse> responseObserver) {
+    return new StreamObserver<TemperatureRequest>() {
+      @Override
+      public void onNext(TemperatureRequest request) {
+        double temperature = request.getTemperature();
+        currentTemperature = temperature;
+        TemperatureResponse response = TemperatureResponse.newBuilder()
+            .setTemperature(currentTemperature)
+            .build();
+        responseObserver.onNext(response);
+      }
+
+      @Override
+      public void onError(Throwable t) {
+        // Handle error
+      }
+
+      @Override
+      public void onCompleted() {
+        responseObserver.onCompleted();
+      }
+    };
+  }
+
+  @Override
+  public void turnHeatingOn(HeatingRequest request, StreamObserver<HeatingResponse> responseObserver) {
+    isHeatingOn = true;
+    HeatingResponse response = HeatingResponse.newBuilder()
+        .setIsHeatingOn(isHeatingOn)
+        .build();
+    responseObserver.onNext(response);
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void turnHeatingOff(HeatingRequest request, StreamObserver<HeatingResponse> responseObserver) {
+    isHeatingOn = false;
+    HeatingResponse response = HeatingResponse.newBuilder()
+        .setIsHeatingOn(isHeatingOn)
+        .build();
+    responseObserver.onNext(response);
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public StreamObserver<TemperatureRequest> monitorTemperature(StreamObserver<TemperatureResponse> responseObserver) {
+    return new StreamObserver<TemperatureRequest>() {
+      @Override
+      public void onNext(TemperatureRequest request) {
+        // Do nothing, we're just monitoring the temperature
+      }
+
+      @Override
+      public void onError(Throwable t) {
+        // Handle error
+      }
+
+      @Override
+      public void onCompleted() {
+        // Do nothing, we're just monitoring the temperature
+      }
+    };
+  }
+}
