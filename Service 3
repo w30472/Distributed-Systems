@@ -1,77 +1,34 @@
-syntax = "proto3";
-
 package smart_surveillance_system;
 
-option java_package = "com.example.smart_surveillance_system.grpc";
-option java_multiple_files = true;
+import java.io.IOException;
 
-import "google/protobuf/empty.proto";
-import "google/rpc/status.proto";
+import com.example.accesscontrol.AccessControlServiceGrpc;
+import com.example.accesscontrol.AccessControlServiceGrpc.AccessControlServiceImplBase;
+import com.example.accesscontrol.StartCameraRequest;
+import com.example.accesscontrol.CameraFeed;
+import com.google.protobuf.ByteString;
 
-service AccessControlService {
-  // Check if the given user is authorized to access the given resource.
-  rpc CheckAuthorization (AuthorizationRequest) returns (AuthorizationResponse) {
-    option (google.api.http) = {
-      post: "/access_control/authorize"
-      body: "*"
-    };
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+import io.grpc.stub.StreamObserver;
+
+public class CameraService extends AccessControlServiceImplBase {
+  public static void main(String[] args) throws IOException, InterruptedException {
+    int port = 50051;
+    Server server = ServerBuilder.forPort(port)
+        .addService(new CameraService())
+        .build()
+        .start();
+    System.out.println("CameraService started, listening on " + port);
+    server.awaitTermination();
   }
 
-  // Get the list of authorized users for the given resource.
-  rpc ListAuthorizedUsers (ListAuthorizedUsersRequest) returns (AuthorizedUsers) {
-    option (google.api.http) = {
-      get: "/access_control/authorized_users"
-    };
-  }
-
-  // Add an authorized user to the given resource.
-  rpc AddAuthorizedUser (AddAuthorizedUserRequest) returns (google.protobuf.Empty) {
-    option (google.api.http) = {
-      post: "/access_control/authorized_users"
-      body: "*"
-    };
-  }
-
-  // Remove an authorized user from the given resource.
-  rpc RemoveAuthorizedUser (RemoveAuthorizedUserRequest) returns (google.protobuf.Empty) {
-    option (google.api.http) = {
-      delete: "/access_control/authorized_users/{user_id}"
-    };
+  @Override
+  public void startCamera(StartCameraRequest request, StreamObserver<CameraFeed> responseObserver) {
+    // TODO: Implement camera startup logic
+    CameraFeed feed = CameraFeed.newBuilder().setVideoFeed(ByteString.copyFrom(new byte[0])).build();
+    responseObserver.onNext(feed);
+    responseObserver.onCompleted();
   }
 }
 
-message AuthorizationRequest {
-  // ID of the resource to check authorization for.
-  string resource_id = 1;
-  // ID of the user to check authorization for.
-  string user_id = 2;
-}
-
-message AuthorizationResponse {
-  // Whether the user is authorized to access the resource.
-  bool is_authorized = 1;
-}
-
-message ListAuthorizedUsersRequest {
-  // ID of the resource to get authorized users for.
-  string resource_id = 1;
-}
-
-message AuthorizedUsers {
-  // List of authorized user IDs for the resource.
-  repeated string user_id = 1;
-}
-
-message AddAuthorizedUserRequest {
-  // ID of the resource to add an authorized user to.
-  string resource_id = 1;
-  // ID of the user to add as an authorized user.
-  string user_id = 2;
-}
-
-message RemoveAuthorizedUserRequest {
-  // ID of the resource to remove an authorized user from.
-  string resource_id = 1;
-  // ID of the user to remove as an authorized user.
-  string user_id = 2;
-}
