@@ -1,0 +1,60 @@
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+import io.grpc.stub.StreamObserver;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+public class SmartThermostatServiceImpl extends SmartThermostatServiceGrpc.SmartThermostatServiceImplBase {
+
+    private final Map<String, Temperature> thermostatMap = new HashMap<>();
+
+    @Override
+    public void getTemperature(TemperatureRequest request, StreamObserver<TemperatureResponse> responseObserver) {
+        String thermostatId = request.getThermostatId();
+        Temperature temperature = thermostatMap.get(thermostatId);
+
+        if (temperature == null) {
+            responseObserver.onError(new RuntimeException("Thermostat with ID " + thermostatId + " not found"));
+            return;
+        }
+
+        TemperatureResponse response = TemperatureResponse.newBuilder()
+                .setTemperature(temperature)
+                .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void setTemperature(TemperatureUpdateRequest request, StreamObserver<TemperatureUpdateResponse> responseObserver) {
+        String thermostatId = request.getThermostatId();
+        Temperature temperature = request.getTemperature();
+
+        thermostatMap.put(thermostatId, temperature);
+
+        TemperatureUpdateResponse response = TemperatureUpdateResponse.newBuilder()
+                .setMessage("Temperature for thermostat " + thermostatId + " set to " + temperature.getValue() + " " + temperature.getUnit())
+                .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+        Server server = ServerBuilder.forPort(8080)
+                .addService(new SmartThermostatServiceImpl())
+                .build();
+
+        System.out.println("Starting server...");
+        server.start();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Shutting down server...");
+            server.shutdown();
+            System.out.println("Server shut down.");
+        }));
+
+        server.awaitTermination();
+    }
+}
