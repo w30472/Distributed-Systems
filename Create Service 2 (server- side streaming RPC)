@@ -1,0 +1,44 @@
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+import io.grpc.stub.StreamObserver;
+import smart_surveillance_system.*;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ThermostatServiceImpl extends ThermostatServiceGrpc.ThermostatServiceImplBase {
+
+    @Override
+    public void streamTemperatures(GetTemperatureRequest request, StreamObserver<GetTemperatureResponse> responseObserver) {
+        // Retrieve the thermostat ID from the request
+        String thermostatId = request.getThermostatId();
+
+        // Stream the temperature values to the client every 1 second
+        while (true) {
+            // Get the current temperature for the given thermostat ID (dummy implementation)
+            double currentTemperature = getCurrentTemperature(thermostatId);
+
+            // Create a response message with the current temperature
+            GetTemperatureResponse response = GetTemperatureResponse.newBuilder()
+                    .setTemperature(currentTemperature)
+                    .build();
+
+            // Send the response back to the client
+            responseObserver.onNext(response);
+
+            // Wait for 1 second before sending the next temperature value
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private double getCurrentTemperature(String thermostatId) {
+        // In a real implementation, this method would retrieve the current temperature from the thermostat hardware
+        // For the sake of this example, we'll just return a random temperature between 60 and 80 degrees Fahrenheit
+        return Math.random() * 20 + 60;
+    }
+}
