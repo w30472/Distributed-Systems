@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package com.example.smartthermostat;
+
+option java_package = "com.example.smartthermostat.grpc";
+option java_multiple_files = true;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/rpc/status.proto";
+
+service SmartThermostatService {
+  // Get the current temperature of the specified room.
+  rpc GetTemperature (GetTemperatureRequest) returns (GetTemperatureResponse) {
+    option (google.api.http) = {
+      get: "/temperature/{room_id}"
+    };
+  }
+
+  // Set the temperature of the specified room.
+  rpc SetTemperature (SetTemperatureRequest) returns (SetTemperatureResponse) {
+    option (google.api.http) = {
+      put: "/temperature/{room_id}"
+      body: "*"
+    };
+  }
+}
+
+message GetTemperatureRequest {
+  // ID of the room to get the temperature for.
+  string room_id = 1;
+  // Optional deadline for the request.
+  google.protobuf.Timestamp deadline = 2;
+}
+
+message GetTemperatureResponse {
+  // Current temperature of the room in Celsius.
+  double temperature = 1;
+}
+
+message SetTemperatureRequest {
+  // ID of the room to set the temperature for.
+  string room_id = 1;
+  // Target temperature to set in Celsius.
+  double temperature = 2;
+}
+
+message SetTemperatureResponse {
+  // Empty response.
+  google.protobuf.Empty empty = 1;
+  // Optional status for the response.
+  google.rpc.Status status = 2;
+}
