@@ -1,0 +1,69 @@
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+import io.grpc.stub.StreamObserver;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+public class AccessControlServiceImpl extends AccessControlServiceGrpc.AccessControlServiceImplBase {
+
+    private final Map<String, AccessCode> accessCodeMap = new HashMap<>();
+
+    @Override
+    public void checkAccess(AccessCheckRequest request, StreamObserver<AccessCheckResponse> responseObserver) {
+        String doorId = request.getDoorId();
+        String accessCode = request.getAccessCode();
+        AccessCode validAccessCode = accessCodeMap.get(doorId);
+
+        if (validAccessCode == null) {
+            responseObserver.onError(new RuntimeException("Door with ID " + doorId + " not found"));
+            return;
+        }
+
+        if (validAccessCode.getCode().equals(accessCode)) {
+            AccessCheckResponse response = AccessCheckResponse.newBuilder()
+                    .setAllowed(true)
+                    .build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } else {
+            AccessCheckResponse response = AccessCheckResponse.newBuilder()
+                    .setAllowed(false)
+                    .build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        }
+    }
+
+    @Override
+    public void setAccessCode(SetAccessCodeRequest request, StreamObserver<SetAccessCodeResponse> responseObserver) {
+        String doorId = request.getDoorId();
+        String newAccessCode = request.getAccessCode();
+
+        accessCodeMap.put(doorId, AccessCode.newBuilder().setCode(newAccessCode).build());
+
+        SetAccessCodeResponse response = SetAccessCodeResponse.newBuilder()
+                .setMessage("Access code for door " + doorId + " set to " + newAccessCode)
+                .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+        Server server = ServerBuilder.forPort(8080)
+                .addService(new AccessControlServiceImpl())
+                .build();
+
+        System.out.println("Starting server...");
+        server.start();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Shutting down server...");
+            server.shutdown();
+            System.out.println("Server shut down.");
+        }));
+
+        server.awaitTermination();
+    }
+}
