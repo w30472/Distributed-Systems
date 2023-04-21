@@ -1,94 +1,55 @@
-syntax = "proto3";
+package com.example.smartthermostat.grpc;
 
-package com.example.smartthermostat;
+import com.example.smartthermostat.*;
 
-option java_package = "com.example.smartthermostat.grpc";
-option java_multiple_files = true;
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+import io.grpc.stub.StreamObserver;
 
-import "google/protobuf/empty.proto";
-import "google/protobuf/timestamp.proto";
-import "google/rpc/status.proto";
+import java.io.IOException;
 
-service SmartThermostatService {
-  // Get the current temperature and humidity readings from the thermostat.
-  rpc GetReadings (GetReadingsRequest) returns (ThermostatReadings) {
-    option (google.api.http) = {
-      get: "/thermostat/readings"
-    };
+public class SmartThermostatServer {
+  public static void main(String[] args) throws IOException, InterruptedException {
+    int port = 50051;
+    Server server = ServerBuilder.forPort(port)
+        .addService(new SmartThermostatServiceImpl())
+        .build()
+        .start();
+    System.out.println("SmartThermostatService started, listening on " + port);
+    server.awaitTermination();
   }
 
-  // Set the target temperature on the thermostat.
-  rpc SetTemperature (SetTemperatureRequest) returns (google.protobuf.Empty) {
-    option (google.api.http) = {
-      post: "/thermostat/temperature"
-      body: "*"
-    };
+  static class SmartThermostatServiceImpl extends SmartThermostatServiceGrpc.SmartThermostatServiceImplBase {
+    @Override
+    public void getTemperature(GetTemperatureRequest request, StreamObserver<GetTemperatureResponse> responseObserver) {
+      // TODO: Implement logic to retrieve temperature for the specified room ID.
+      double temperature = 22.5; // dummy value for example purposes
+      GetTemperatureResponse response = GetTemperatureResponse.newBuilder()
+          .setTemperature(temperature)
+          .build();
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void setTemperature(SetTemperatureRequest request, StreamObserver<SetTemperatureResponse> responseObserver) {
+      // TODO: Implement logic to set temperature for the specified room ID.
+      double temperature = request.getTemperature();
+      // dummy logic to check if temperature is valid
+      if (temperature < 10 || temperature > 30) {
+        SetTemperatureResponse response = SetTemperatureResponse.newBuilder()
+            .setStatus(io.grpc.Status.INVALID_ARGUMENT.withDescription("Temperature must be between 10 and 30 Celsius"))
+            .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+        return;
+      }
+      SetTemperatureResponse response = SetTemperatureResponse.newBuilder()
+          .setEmpty(com.google.protobuf.Empty.getDefaultInstance())
+          .build();
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
+    }
   }
-
-  // Get the current program settings from the thermostat.
-  rpc GetProgram (GetProgramRequest) returns (ThermostatProgram) {
-    option (google.api.http) = {
-      get: "/thermostat/program"
-    };
-  }
-
-  // Set the program settings on the thermostat.
-  rpc SetProgram (SetProgramRequest) returns (google.protobuf.Empty) {
-    option (google.api.http) = {
-      post: "/thermostat/program"
-      body: "*"
-    };
-  }
 }
 
-message GetReadingsRequest {
-  // Optional deadline for the request.
-  google.protobuf.Timestamp deadline = 1;
-}
-
-message ThermostatReadings {
-  // Current temperature reading in degrees Celsius.
-  double temperature = 1;
-  // Current humidity reading as a percentage.
-  double humidity = 2;
-  // Timestamp when the readings were taken.
-  google.protobuf.Timestamp timestamp = 3;
-}
-
-message SetTemperatureRequest {
-  // Target temperature to set in degrees Celsius.
-  double temperature = 1;
-}
-
-message GetProgramRequest {
-  // Optional deadline for the request.
-  google.protobuf.Timestamp deadline = 1;
-}
-
-message ThermostatProgram {
-  // Weekday program settings for the thermostat.
-  repeated ThermostatProgramDay weekday = 1;
-  // Weekend program settings for the thermostat.
-  repeated ThermostatProgramDay weekend = 2;
-}
-
-message ThermostatProgramDay {
-  // Program settings for each time period during the day.
-  repeated ThermostatProgramTimePeriod time_period = 1;
-}
-
-message ThermostatProgramTimePeriod {
-  // Start time for the time period, in 24-hour format (e.g. 08:00).
-  string start_time = 1;
-  // End time for the time period, in 24-hour format (e.g. 17:00).
-  string end_time = 2;
-  // Target temperature for the time period, in degrees Celsius.
-  double temperature = 3;
-}
-
-message SetProgramRequest {
-  // Weekday program settings for the thermostat.
-  repeated ThermostatProgramDay weekday = 1;
-  // Weekend program settings for the thermostat.
-  repeated ThermostatProgramDay weekend = 2;
-}
