@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package smart_surveillance_system;
+
+option java_package = "com.example.smart_surveillance_system.grpc";
+option java_multiple_files = true;
+
+import "google/protobuf/empty.proto";
+import "google/rpc/status.proto";
+
+service AccessControlService {
+  // Check if the given user is authorized to access the given resource.
+  rpc CheckAuthorization (AuthorizationRequest) returns (AuthorizationResponse) {
+    option (google.api.http) = {
+      post: "/access_control/authorize"
+      body: "*"
+    };
+  }
+
+  // Get the list of authorized users for the given resource.
+  rpc ListAuthorizedUsers (ListAuthorizedUsersRequest) returns (AuthorizedUsers) {
+    option (google.api.http) = {
+      get: "/access_control/authorized_users"
+    };
+  }
+
+  // Add an authorized user to the given resource.
+  rpc AddAuthorizedUser (AddAuthorizedUserRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/access_control/authorized_users"
+      body: "*"
+    };
+  }
+
+  // Remove an authorized user from the given resource.
+  rpc RemoveAuthorizedUser (RemoveAuthorizedUserRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/access_control/authorized_users/{user_id}"
+    };
+  }
+}
+
+message AuthorizationRequest {
+  // ID of the resource to check authorization for.
+  string resource_id = 1;
+  // ID of the user to check authorization for.
+  string user_id = 2;
+}
+
+message AuthorizationResponse {
+  // Whether the user is authorized to access the resource.
+  bool is_authorized = 1;
+}
+
+message ListAuthorizedUsersRequest {
+  // ID of the resource to get authorized users for.
+  string resource_id = 1;
+}
+
+message AuthorizedUsers {
+  // List of authorized user IDs for the resource.
+  repeated string user_id = 1;
+}
+
+message AddAuthorizedUserRequest {
+  // ID of the resource to add an authorized user to.
+  string resource_id = 1;
+  // ID of the user to add as an authorized user.
+  string user_id = 2;
+}
+
+message RemoveAuthorizedUserRequest {
+  // ID of the resource to remove an authorized user from.
+  string resource_id = 1;
+  // ID of the user to remove as an authorized user.
+  string user_id = 2;
+}
