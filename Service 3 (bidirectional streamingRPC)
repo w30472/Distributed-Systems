@@ -1,0 +1,47 @@
+// Server implementation
+public class AccessControlServer extends AccessControlServiceGrpc.AccessControlServiceImplBase {
+  @Override
+  public StreamObserver<AuthenticateRequest> authenticate(StreamObserver<AuthenticateResponse> responseObserver) {
+    return new StreamObserver<AuthenticateRequest>() {
+      @Override
+      public void onNext(AuthenticateRequest request) {
+        String username = request.getUsername();
+        String password = request.getPassword();
+
+        // Perform authentication logic
+        boolean authenticated = authenticateUser(username, password);
+        String message = authenticated ? "Authentication successful" : "Authentication failed";
+
+        // Send response to client
+        AuthenticateResponse response = AuthenticateResponse.newBuilder()
+            .setAuthenticated(authenticated)
+            .setMessage(message)
+            .build();
+        responseObserver.onNext(response);
+      }
+
+      @Override
+      public void onError(Throwable t) {
+        // Handle error
+      }
+
+      @Override
+      public void onCompleted() {
+        responseObserver.onCompleted();
+      }
+    };
+  }
+
+  private boolean authenticateUser(String username, String password) {
+    // Perform actual authentication logic here
+    // For example, check against a database of users and passwords
+    return username.equals("user") && password.equals("password");
+  }
+}
+
+// Client implementation
+public class AccessControlClient {
+  private final AccessControlServiceGrpc.AccessControlServiceStub stub;
+
+  public AccessControlClient(Channel channel) {
+   
