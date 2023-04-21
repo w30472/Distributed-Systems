@@ -1,0 +1,32 @@
+public class SmartThermostatService extends ThermostatServiceGrpc.ThermostatServiceImplBase {
+
+  @Override
+  public StreamObserver<SetTemperatureRequest> setTemperatures(StreamObserver<SetTemperatureResponse> responseObserver) {
+    return new StreamObserver<SetTemperatureRequest>() {
+      @Override
+      public void onNext(SetTemperatureRequest request) {
+        String thermostatId = request.getThermostatId();
+        double temperature = request.getTemperature();
+        
+        // Do something with the received temperature value, e.g., update the thermostat hardware
+        System.out.println("Setting temperature " + temperature + " for thermostat " + thermostatId);
+      }
+
+      @Override
+      public void onError(Throwable t) {
+        // Handle error
+      }
+
+      @Override
+      public void onCompleted() {
+        // Send a response indicating that the temperature values have been set successfully
+        SetTemperatureResponse response = SetTemperatureResponse.newBuilder()
+            .setSuccess(true)
+            .setMessage("Temperature values set successfully")
+            .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+      }
+    };
+  }
+}
