@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package com.example.smartthermostat;
+
+option java_package = "com.example.smartthermostat.grpc";
+option java_multiple_files = true;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/rpc/status.proto";
+
+service SmartThermostatService {
+  // Get the current temperature and humidity readings from the thermostat.
+  rpc GetReadings (GetReadingsRequest) returns (ThermostatReadings) {
+    option (google.api.http) = {
+      get: "/thermostat/readings"
+    };
+  }
+
+  // Set the target temperature on the thermostat.
+  rpc SetTemperature (SetTemperatureRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/thermostat/temperature"
+      body: "*"
+    };
+  }
+
+  // Get the current program settings from the thermostat.
+  rpc GetProgram (GetProgramRequest) returns (ThermostatProgram) {
+    option (google.api.http) = {
+      get: "/thermostat/program"
+    };
+  }
+
+  // Set the program settings on the thermostat.
+  rpc SetProgram (SetProgramRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/thermostat/program"
+      body: "*"
+    };
+  }
+}
+
+message GetReadingsRequest {
+  // Optional deadline for the request.
+  google.protobuf.Timestamp deadline = 1;
+}
+
+message ThermostatReadings {
+  // Current temperature reading in degrees Celsius.
+  double temperature = 1;
+  // Current humidity reading as a percentage.
+  double humidity = 2;
+  // Timestamp when the readings were taken.
+  google.protobuf.Timestamp timestamp = 3;
+}
+
+message SetTemperatureRequest {
+  // Target temperature to set in degrees Celsius.
+  double temperature = 1;
+}
+
+message GetProgramRequest {
+  // Optional deadline for the request.
+  google.protobuf.Timestamp deadline = 1;
+}
+
+message ThermostatProgram {
+  // Weekday program settings for the thermostat.
+  repeated ThermostatProgramDay weekday = 1;
+  // Weekend program settings for the thermostat.
+  repeated ThermostatProgramDay weekend = 2;
+}
+
+message ThermostatProgramDay {
+  // Program settings for each time period during the day.
+  repeated ThermostatProgramTimePeriod time_period = 1;
+}
+
+message ThermostatProgramTimePeriod {
+  // Start time for the time period, in 24-hour format (e.g. 08:00).
+  string start_time = 1;
+  // End time for the time period, in 24-hour format (e.g. 17:00).
+  string end_time = 2;
+  // Target temperature for the time period, in degrees Celsius.
+  double temperature = 3;
+}
+
+message SetProgramRequest {
+  // Weekday program settings for the thermostat.
+  repeated ThermostatProgramDay weekday = 1;
+  // Weekend program settings for the thermostat.
+  repeated ThermostatProgramDay weekend = 2;
+}
