@@ -1,0 +1,67 @@
+import io.grpc.stub.StreamObserver;
+import java.util.HashMap;
+import java.util.Map;
+import smart_surveillance_system.ThermostatServiceGrpc.ThermostatServiceImplBase;
+import smart_surveillance_system.*;
+
+public class ThermostatServiceImpl extends ThermostatServiceImplBase {
+
+    private Map<String, Double> temperatureMap = new HashMap<>();
+    private Map<String, Schedule> scheduleMap = new HashMap<>();
+
+    @Override
+    public void setTemperature(SetTemperatureRequest request, StreamObserver<SetTemperatureResponse> responseObserver) {
+        // Retrieve the thermostat ID and desired temperature from the request
+        String thermostatId = request.getThermostatId();
+        double temperature = request.getTemperature();
+
+        // Set the temperature for the given thermostat ID in the temperature map
+        temperatureMap.put(thermostatId, temperature);
+
+        // Create a SetTemperatureResponse message to send back as the response
+        SetTemperatureResponse response = SetTemperatureResponse.newBuilder()
+                .setSuccess(true)
+                .build();
+
+        // Send the response back to the client
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getTemperature(GetTemperatureRequest request, StreamObserver<GetTemperatureResponse> responseObserver) {
+        // Retrieve the thermostat ID from the request
+        String thermostatId = request.getThermostatId();
+
+        // Retrieve the temperature for the given thermostat ID from the temperature map
+        double temperature = temperatureMap.getOrDefault(thermostatId, 0.0);
+
+        // Create a GetTemperatureResponse message to send back as the response
+        GetTemperatureResponse response = GetTemperatureResponse.newBuilder()
+                .setTemperature(temperature)
+                .build();
+
+        // Send the response back to the client
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void setSchedule(SetScheduleRequest request, StreamObserver<SetScheduleResponse> responseObserver) {
+        // Retrieve the thermostat ID and schedules from the request
+        String thermostatId = request.getThermostatId();
+        Iterable<Schedule> schedules = request.getSchedulesList();
+
+        // Set the schedules for the given thermostat ID in the schedule map
+        scheduleMap.put(thermostatId, schedules.iterator().next());
+
+        // Create a SetScheduleResponse message to send back as the response
+        SetScheduleResponse response = SetScheduleResponse.newBuilder()
+                .setSuccess(true)
+                .build();
+
+        // Send the response back to the client
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+}
