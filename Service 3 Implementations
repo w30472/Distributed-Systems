@@ -1,0 +1,44 @@
+import io.grpc.stub.StreamObserver;
+import com.example.accesscontrol.AccessControlServiceGrpc;
+import com.example.accesscontrol.AccessControlServiceOuterClass.*;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class AccessControlServiceImpl extends AccessControlServiceGrpc.AccessControlServiceImplBase {
+    private final Map<String, Boolean> accessMap = new HashMap<>();
+
+    @Override
+    public void checkAccess(AccessCheckRequest request, StreamObserver<AccessCheckResponse> responseObserver) {
+        String userId = request.getUserId();
+        String resourceId = request.getResourceId();
+
+        Boolean hasAccess = accessMap.get(resourceId + userId);
+
+        if (hasAccess == null) {
+            responseObserver.onError(
+                    io.grpc.Status.NOT_FOUND.withDescription("Access for user " + userId + " to resource " + resourceId + " not found")
+                            .asException());
+            return;
+        }
+
+        AccessCheckResponse response = AccessCheckResponse.newBuilder().setHasAccess(hasAccess).build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void grantAccess(AccessGrantRequest request, StreamObserver<AccessGrantResponse> responseObserver) {
+        String userId = request.getUserId();
+        String resourceId = request.getResourceId();
+        boolean accessGranted = request.getAccessGranted();
+
+        accessMap.put(resourceId + userId, accessGranted);
+
+        AccessGrantResponse response = AccessGrantResponse.newBuilder()
+                .setMessage("Access for user " + userId + " to resource " + resourceId + " " + (accessGranted ? "granted" : "revoked"))
+                .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+}
