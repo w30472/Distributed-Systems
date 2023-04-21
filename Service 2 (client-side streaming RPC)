@@ -1,0 +1,60 @@
+public class SmartThermostatClient {
+    private final SmartThermostatServiceGrpc.SmartThermostatServiceStub stub;
+
+    public SmartThermostatClient(Channel channel) {
+        stub = SmartThermostatServiceGrpc.newStub(channel);
+    }
+
+    public void sendTemperatureReadings(String thermostatId) {
+        StreamObserver<ThermostatReadingRequest> requestObserver = stub.sendTemperatureReadings(
+                new StreamObserver<ThermostatReadingResponse>() {
+                    @Override
+                    public void onNext(ThermostatReadingResponse response) {
+                        // Process the response from the server (if needed)
+                        System.out.println("Response received from server: " + response.getMessage());
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        // Handle any errors that occur during the streaming
+                        System.out.println("Error occurred during streaming: " + t.getMessage());
+                    }
+
+                    @Override
+                    public void onCompleted() {
+                        // Indicate that the streaming has completed
+                        System.out.println("Streaming completed");
+                    }
+                });
+
+        // Send multiple requests with temperature readings
+        for (int i = 0; i < 5; i++) {
+            double temperature = getCurrentTemperature(thermostatId);
+
+            // Create a request message with the current temperature reading
+            ThermostatReadingRequest request = ThermostatReadingRequest.newBuilder()
+                    .setThermostatId(thermostatId)
+                    .setTemperature(temperature)
+                    .build();
+
+            // Send the request to the server
+            requestObserver.onNext(request);
+
+            // Wait for 1 second before sending the next request
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Indicate that the client has finished sending requests
+        requestObserver.onCompleted();
+    }
+
+    private double getCurrentTemperature(String thermostatId) {
+        // In a real implementation, this method would retrieve the current temperature from the thermostat hardware
+        // For the sake of this example, we'll just return a random temperature between 60 and 80 degrees Fahrenheit
+        return Math.random() * 20 + 60;
+    }
+}
