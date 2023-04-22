@@ -1,0 +1,78 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import smart_surveillance_system.CameraServiceGrpc;
+import smart_surveillance_system.StartCameraRequest;
+import smart_surveillance_system.CameraFeed;
+
+public class CameraClientGUI extends JFrame {
+    private final CameraServiceGrpc.CameraServiceBlockingStub blockingStub;
+    private final JPanel mainPanel;
+    private final JTextField cameraIdTextField;
+    private final JButton startButton;
+    private final JLabel videoFeedLabel;
+    private final JScrollPane videoFeedScrollPane;
+
+    public CameraClientGUI(String host, int port) {
+        ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port)
+                .usePlaintext()
+                .build();
+        blockingStub = CameraServiceGrpc.newBlockingStub(channel);
+
+        mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout());
+
+        JPanel controlPanel = new JPanel();
+        controlPanel.setLayout(new FlowLayout());
+
+        JLabel cameraIdLabel = new JLabel("Camera ID:");
+        controlPanel.add(cameraIdLabel);
+
+        cameraIdTextField = new JTextField();
+        cameraIdTextField.setPreferredSize(new Dimension(150, 25));
+        controlPanel.add(cameraIdTextField);
+
+        startButton = new JButton("Start Camera");
+        startButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                startCamera();
+            }
+        });
+        controlPanel.add(startButton);
+
+        mainPanel.add(controlPanel, BorderLayout.NORTH);
+
+        videoFeedLabel = new JLabel();
+        videoFeedScrollPane = new JScrollPane(videoFeedLabel);
+        mainPanel.add(videoFeedScrollPane, BorderLayout.CENTER);
+
+        setTitle("Camera Client");
+        setSize(800, 600);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setContentPane(mainPanel);
+        setVisible(true);
+    }
+
+    private void startCamera() {
+        String cameraId = cameraIdTextField.getText();
+
+        StartCameraRequest request = StartCameraRequest.newBuilder()
+                .setCameraId(cameraId)
+                .build();
+
+        CameraFeed feed = blockingStub.startCamera(request);
+
+        byte[] videoFeedBytes = feed.getVideoFeed().toByteArray();
+        ImageIcon imageIcon = new ImageIcon(videoFeedBytes);
+        videoFeedLabel.setIcon(imageIcon);
+    }
+
+    public static void main(String[] args) {
+        CameraClientGUI clientGUI = new CameraClientGUI("localhost", 50051);
+    }
+}
