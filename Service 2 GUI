@@ -128,19 +128,24 @@ public class ThermostatClientGUI {
         JButton btnSetSchedule = new JButton("Set Schedule");
         buttonPanel.add(btnSetSchedule);
 
-        // Set temperature button action listener
-        btnSetTemperature.addActionListener(new ActionListener() {
-    public void actionPerformed(ActionEvent e) {
-        String thermostatId = txtThermostatId.getText();
-        String setTemp = txtSetTemp.getText();
+      // Set schedule button action listener
+    btnSetSchedule.addActionListener(new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+            String thermostatId = txtThermostatId.getText();
+            String schedule = txtSchedule.getText();
+            String startTime = txtStartTime.getText();
+            String endTime = txtEndTime.getText();
+            String days = txtDays.getText();
+            String scheduleTemp = txtScheduleTemp.getText();
 
-        // TODO: Send the set temperature command to the thermostat with the given ID
+            // TODO: Send the set schedule command to the thermostat with the given ID and inputs
 
-        // Update the current temperature field
-        String currentTemp = "23.5"; // TODO: Get the current temperature from the thermostat with the given ID
-        txtGetTemp.setText(currentTemp);
-    }
-});
+            // Update the schedule field with the newly set schedule
+            String newSchedule = "Weekdays: 6am-9am @ 20C, 5pm-10pm @ 22C"; // TODO: Get the new schedule from the thermostat with the given ID
+            txtSchedule.setText(newSchedule);
+        }
+    });
+}
 
 
 
