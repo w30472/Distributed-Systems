@@ -1,0 +1,48 @@
+import javax.jmdns.JmDNS;
+import javax.jmdns.ServiceEvent;
+import javax.jmdns.ServiceListener;
+import javax.jmdns.ServiceInfo;
+import java.io.IOException;
+import java.net.InetAddress;
+
+public class SmartThermostatDiscovery {
+
+    public static void main(String[] args) {
+        try {
+            JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
+            String serviceType = "_smartthermostat._tcp.local.";
+            ServiceListener listener = new ServiceListener() {
+                @Override
+                public void serviceAdded(ServiceEvent event) {
+                    // Service has been discovered
+                    System.out.println("Service added: " + event.getInfo().getName());
+                    jmdns.requestServiceInfo(event.getType(), event.getName());
+                }
+
+                @Override
+                public void serviceRemoved(ServiceEvent event) {
+                    // Service has been removed
+                    System.out.println("Service removed: " + event.getInfo().getName());
+                }
+
+                @Override
+                public void serviceResolved(ServiceEvent event) {
+                    // Service has been resolved
+                    ServiceInfo info = event.getInfo();
+                    System.out.println("Service resolved: " + info.getName() + " at " + info.getHostAddress());
+                    System.out.println("Port: " + info.getPort());
+                    // You can use the ServiceInfo object to access additional details about the service
+                }
+            };
+            jmdns.addServiceListener(serviceType, listener);
+
+            // Wait for a while to discover services
+            Thread.sleep(5000);
+            jmdns.removeServiceListener(serviceType, listener);
+            jmdns.close();
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
