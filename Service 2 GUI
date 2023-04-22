@@ -1,0 +1,149 @@
+import java.awt.BorderLayout;
+import java.awt.EventQueue;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+
+public class ThermostatClientGUI {
+
+    private JFrame frame;
+    private JTextField txtThermostatId;
+    private JTextField txtSetTemp;
+    private JTextField txtGetTemp;
+    private JTextField txtSchedule;
+    private JTextField txtStartTime;
+    private JTextField txtEndTime;
+    private JTextField txtDays;
+    private JTextField txtScheduleTemp;
+
+    /**
+     * Launch the application.
+     */
+    public static void main(String[] args) {
+        EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                try {
+                    ThermostatClientGUI window = new ThermostatClientGUI();
+                    window.frame.setVisible(true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    /**
+     * Create the application.
+     */
+    public ThermostatClientGUI() {
+        initialize();
+    }
+
+    /**
+     * Initialize the contents of the frame.
+     */
+    private void initialize() {
+        frame = new JFrame();
+        frame.setBounds(100, 100, 500, 300);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        JPanel panel = new JPanel();
+        frame.getContentPane().add(panel, BorderLayout.CENTER);
+        panel.setLayout(new GridLayout(0, 2, 10, 10));
+
+        JLabel lblThermostatId = new JLabel("Thermostat ID:");
+        panel.add(lblThermostatId);
+
+        txtThermostatId = new JTextField();
+        panel.add(txtThermostatId);
+        txtThermostatId.setColumns(10);
+
+        JLabel lblSetTemp = new JLabel("Set Temperature:");
+        panel.add(lblSetTemp);
+
+        txtSetTemp = new JTextField();
+        panel.add(txtSetTemp);
+        txtSetTemp.setColumns(10);
+
+        JLabel lblGetTemp = new JLabel("Current Temperature:");
+        panel.add(lblGetTemp);
+
+        txtGetTemp = new JTextField();
+        txtGetTemp.setEditable(false);
+        panel.add(txtGetTemp);
+        txtGetTemp.setColumns(10);
+
+        JLabel lblSchedule = new JLabel("Schedule:");
+        panel.add(lblSchedule);
+
+        txtSchedule = new JTextField();
+        panel.add(txtSchedule);
+        txtSchedule.setColumns(10);
+
+        JLabel lblStartTime = new JLabel("Start Time:");
+        panel.add(lblStartTime);
+
+        txtStartTime = new JTextField();
+        panel.add(txtStartTime);
+        txtStartTime.setColumns(10);
+
+        JLabel lblEndTime = new JLabel("End Time:");
+        panel.add(lblEndTime);
+
+        txtEndTime = new JTextField();
+        panel.add(txtEndTime);
+        txtEndTime.setColumns(10);
+
+        JLabel lblDays = new JLabel("Days:");
+        panel.add(lblDays);
+
+        txtDays = new JTextField();
+        panel.add(txtDays);
+        txtDays.setColumns(10);
+
+        JLabel lblScheduleTemp = new JLabel("Temperature:");
+        panel.add(lblScheduleTemp);
+
+        txtScheduleTemp = new JTextField();
+        panel.add(txtScheduleTemp);
+        txtScheduleTemp.setColumns(10);
+
+        JPanel buttonPanel = new JPanel();
+        frame.getContentPane().add(buttonPanel, BorderLayout.SOUTH);
+
+        JButton btnSetTemperature = new JButton("Set Temperature");
+        buttonPanel.add(btnSetTemperature);
+
+        JButton btnGetTemperature = new JButton("Get Temperature");
+        buttonPanel.add(btnGetTemperature);
+
+        JButton btnSetSchedule = new JButton("Set Schedule");
+        buttonPanel.add(btnSetSchedule);
+
+        // Set temperature button action listener
+        btnSetTemperature.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent e) {
+        String thermostatId = txtThermostatId.getText();
+        String setTemp = txtSetTemp.getText();
+
+        // TODO: Send the set temperature command to the thermostat with the given ID
+
+        // Update the current temperature field
+        String currentTemp = "23.5"; // TODO: Get the current temperature from the thermostat with the given ID
+        txtGetTemp.setText(currentTemp);
+    }
+});
+
+
+
+
+
+
