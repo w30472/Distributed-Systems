@@ -1,0 +1,70 @@
+import io.grpc.*;
+import io.grpc.stub.StreamObserver;
+import io.grpc.examples.smartcameraservice.CameraServiceGrpc;
+import io.grpc.examples.smartcameraservice.CameraFeed;
+import io.grpc.examples.smartcameraservice.StartCameraRequest;
+
+import javax.jmdns.JmDNS;
+import javax.jmdns.ServiceInfo;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public class SmartCameraServiceServer {
+    private static final Logger logger = Logger.getLogger(SmartCameraServiceServer.class.getName());
+
+    private Server server;
+
+    private void start(String serviceType, int servicePort, String serviceDescription) throws IOException {
+        /* The port on which the server should run */
+        int port = 50051;
+        server = ServerBuilder.forPort(port)
+                .addService(new CameraServiceImpl())
+                .build()
+                .start();
+
+        logger.info("Smart Camera Service started, listening on " + port);
+
+        /* Register the service with JmDNS */
+        try {
+            JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
+            ServiceInfo serviceInfo = ServiceInfo.create(serviceType, serviceDescription, servicePort, "Smart Camera Service");
+            jmdns.registerService(serviceInfo);
+            logger.info("Service registered with JmDNS");
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Failed to register service with JmDNS", e);
+        }
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.err.println("*** shutting down gRPC server since JVM is shutting down");
+            SmartCameraServiceServer.this.stop();
+            System.err.println("*** server shut down");
+        }));
+    }
+
+    private void stop() {
+        if (server != null) {
+            server.shutdown();
+        }
+    }
+
+    private void blockUntilShutdown() throws InterruptedException {
+        if (server != null) {
+            server.awaitTermination();
+        }
+    }
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+        final SmartCameraServiceServer server = new SmartCameraServiceServer();
+        server.start("_smartcamera._tcp.local.", 50051, "Smart Camera Service");
+        server.blockUntilShutdown();
+    }
+
+    static class CameraServiceImpl extends CameraServiceGrpc.CameraServiceImplBase {
+        @Override
+        public void startCamera(StartCameraRequest request, StreamObserver<CameraFeed> responseObserver) {
+            // Implementation of startCamera method
+        }
+    }
+}
