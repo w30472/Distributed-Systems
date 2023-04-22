@@ -1,0 +1,48 @@
+import javax.jmdns.JmDNS;
+import javax.jmdns.ServiceEvent;
+import javax.jmdns.ServiceListener;
+import javax.jmdns.ServiceInfo;
+import java.io.IOException;
+import java.net.InetAddress;
+
+public class AccessControlServiceDiscovery {
+
+    public static void main(String[] args) throws IOException {
+        JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
+
+        String serviceType = "_accesscontrol._tcp.local.";
+
+        ServiceListener listener = new ServiceListener() {
+            @Override
+            public void serviceAdded(ServiceEvent event) {
+                System.out.println("Service added: " + event.getInfo());
+                jmdns.requestServiceInfo(event.getType(), event.getName());
+            }
+
+            @Override
+            public void serviceRemoved(ServiceEvent event) {
+                System.out.println("Service removed: " + event.getInfo());
+            }
+
+            @Override
+            public void serviceResolved(ServiceEvent event) {
+                ServiceInfo serviceInfo = event.getInfo();
+                System.out.println("Service resolved: " + serviceInfo);
+                System.out.println("Service address: " + serviceInfo.getHostAddress());
+                System.out.println("Service port: " + serviceInfo.getPort());
+            }
+        };
+
+        jmdns.addServiceListener(serviceType, listener);
+
+        // Wait a bit
+        try {
+            Thread.sleep(30000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        jmdns.removeServiceListener(serviceType, listener);
+        jmdns.close();
+    }
+}
